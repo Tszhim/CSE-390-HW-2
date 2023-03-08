@@ -2,13 +2,13 @@
 #define SIMULATION_H
 
 #include <string>
-#include "../concrete/concrete_algorithm.h"
-#include "../concrete/concrete_battery_meter.h"
-#include "../concrete/concrete_dirt_sensor.h"
-#include "../concrete/concrete_walls_sensor.h"
-#include "../main/house.h"
-#include "../main/robot.h"
-#include "../utils/file_writer.h"
+#include "concrete_algorithm.h"
+#include "concrete_battery_meter.h"
+#include "concrete_dirt_sensor.h"
+#include "concrete_walls_sensor.h"
+#include "house.h"
+#include "robot.h"
+#include "file_writer.h"
 
 /**
  * @brief A class declaration for simulating the robot's mission.
@@ -33,7 +33,7 @@ public:
      * @param houseFilePath The location of the input file.
      * @return true if success, false if I/O error.
      */
-    bool readHouseFile(std::string houseFilePath);
+    bool readHouseFile(const std::string houseFilePath);
 
     /**
      * @brief Initializes the algorithm to prepare for simulation start.

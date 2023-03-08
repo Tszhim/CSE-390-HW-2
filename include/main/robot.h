@@ -2,8 +2,9 @@
 #define ROBOT_H
 
 #include <string>
-#include "../enums/step.h"
-#include "../utils/coordinate.h"
+#include "step.h"
+#include "coordinate.h"
+#include "file_reader.h"
 
 /**
  * @brief A class declaration to represent the state of the cleaning robot.
@@ -28,9 +29,14 @@ public:
      * @param infile_name The name of the input file.
      * @return true if success, false if I/O error.
      */
-    bool robotSetup(const std::string infileName);
+    bool robotSetup(const std::string infilePath);
 
     /**
+     * @brief Checks for the number of steps allocated to the robot for the mission.
+     * @return The number of allocated steps.
+    */
+    int getMissionBudget() const;
+    /** 
      * @brief Checks for the total number of steps the robot has taken.
      * @return The number of steps.
      */

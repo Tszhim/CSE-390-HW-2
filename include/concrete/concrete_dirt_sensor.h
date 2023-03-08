@@ -1,7 +1,7 @@
 #ifndef CONCRETE_DIRT_SENSOR_H
 #define CONCRETE_DIRT_SENSOR_H
 
-#include "../abstract/abstract_dirt_sensor.h"
+#include "abstract_dirt_sensor.h"
 
 /**
  * @brief The concrete implementation of the abstract class "DirtSensor".
@@ -34,7 +34,7 @@ public:
     void setDirtLevel(int dirtLevel);
 
 private:
-    int dirtLevel; // The amount of dirt at the location of the robot.
+    int dirt; // The amount of dirt at the location of the robot.
 };
 
 #endif

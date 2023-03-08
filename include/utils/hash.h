@@ -2,7 +2,7 @@
 #define HASH_H
 
 #include <cstddef>
-#include "../utils/coordinate.h"
+#include "coordinate.h"
 
 /**
  * @brief An struct declaration for hashing coordinates.

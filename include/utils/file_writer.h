@@ -1,13 +1,13 @@
 #ifndef FILE_WRITER_H
 #define FILE_WRITER_H
 
-#include <utility> 
+#include <fstream>
 #include <string>
-#include "../enums/direction.h"
-#include "../enums/step.h"
-#include "../utils/coordinate.h"
+#include "direction.h"
+#include "step.h"
+#include "coordinate.h"
 
-#define O_FILE "output.txt"
+#define OFILE "output.txt"
 
 /**
  * @brief A class declaration for writing mission results to file.
@@ -30,13 +30,17 @@ public:
      * @brief Records step for result output.
      * @param s The step the robot made.
      */
-    void recordStep(Step s);
+    void recordStep(const Step s);
     
     /**
      * @brief Writes results to output file.
+     * @param totalSteps The number of steps the robot took throughout the mission.
+     * @param dirtLeft The amount of remaining uncleaned dirt in the house at the end of the mission.
+     * @param batteryLeft The amount of battery the robot has left at the end of the mission.
+     * @param loc The location of the robot at the end of the mission.
      * @return true on success, false if I/O error.
      */
-    bool recordResults() const;
+    bool recordResults(const int totalSteps, const int dirtLeft, const int batteryLeft) const;
 
 private:
     std::string steps; // Maintains the list of steps the robot has taken.
@@ -49,21 +53,25 @@ private:
 
     /**
      * @brief Writes the total number of steps the robot took on the mission to output file.
+     * @param totalSteps The number of steps the robot took throughout the mission.
      * @return true on success, false if I/O error.
      */
-    bool writeStepCount(const int total_steps) const; 
+    bool writeStepCount(const int totalSteps) const; 
 
     /**
      * @brief Writes the remaining amount of dirt in the house to output file.
+     * @param dirtLeft The amount of remaining uncleaned dirt in the house at the end of the mission.
      * @return true on success, false if I/O error.
      */
-    bool writeDirtLeft(const int dirt_left) const;
+    bool writeDirtLeft(const int dirtLeft) const;
 
     /**
      * @brief Writes the final status of the robot (FINISHED/WORKING/DEAD).
+     * @param batteryLeft The amount of battery the robot has left at the end of the mission.
+     * @param loc The location of the robot at the end of the mission.
      * @return true on success, false if I/O error.
      */
-    bool writeRobotStatus(const int battery_left, const Coordinate loc) const;
+    bool writeRobotStatus(const int batteryLeft) const;
 
     /**
      * @brief Writes the steps that the robot took on the mission.

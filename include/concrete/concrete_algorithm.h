@@ -1,12 +1,11 @@
 #ifndef CONCRETE_ALGORITHM_H
 #define CONCRETE_ALGORITHM_H
 
-#include <cstddef>
 #include <unordered_map>
 #include <unordered_set>
 #include <stack>
-#include "../abstract/abstract_algorithm.h"
-#include "../utils/coordinate.h"
+#include "abstract_algorithm.h"
+#include "coordinate.h"
 
 /**
  * @brief The concrete implementation of the abstract class "AbstractAlgorithm".
@@ -30,7 +29,7 @@ public:
      * @brief Stores the number of steps allocated to the robot for the mission.
      * @param maxSteps The number of steps allocated.
      */
-    void setMaxSteps(size_t maxSteps);
+    void setMaxSteps(std::size_t maxSteps);
 
     /**
      * @brief Stores the location of the BatteryMeter for future data requests.

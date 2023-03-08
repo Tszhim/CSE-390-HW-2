@@ -2,10 +2,10 @@
 #define ABSTRACT_ALGORITHM_H
 
 #include <cstddef>
-#include "../abstract/abstract_walls_sensor.h"
-#include "../abstract/abstract_dirt_sensor.h"
-#include "../abstract/abstract_battery_meter.h"
-#include "../enums/step.h"
+#include "abstract_walls_sensor.h"
+#include "abstract_dirt_sensor.h"
+#include "abstract_battery_meter.h"
+#include "step.h"
 
 using std::size_t;
 

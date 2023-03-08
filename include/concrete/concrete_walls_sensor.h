@@ -1,7 +1,7 @@
 #ifndef CONCRETE_WALLS_SENSOR_H
 #define CONCRETE_WALLS_SENSOR_H
 
-#include "../abstract/abstract_walls_sensor.h"
+#include "abstract_walls_sensor.h"
 
 /**
  * @brief The concrete implementation of the abstract class "WallsSensor".

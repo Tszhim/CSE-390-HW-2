@@ -1,7 +1,7 @@
 #ifndef CONCRETE_BATTERY_METER_H
 #define CONCRETE_BATTERY_METER_H
 
-#include "../abstract/abstract_battery_meter.h"
+#include "abstract_battery_meter.h"
 
 /**
  * @brief The concrete implementation of the abstract class "BatteryMeter".

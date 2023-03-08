@@ -4,8 +4,9 @@
 #include <string>
 #include <unordered_set>
 #include <unordered_map>
-#include "../utils/coordinate.h"
-#include "../utils/hash.h"
+#include "coordinate.h"
+#include "file_reader.h"
+#include "hash.h"
 
 /**
  * @brief A class declaration to represent the internal structure of a house.
@@ -30,7 +31,7 @@ public:
      * @param infile_name The name of the input file.
      * @return true if success, false if I/O error.
      */
-    bool houseSetup(const std::string infileName);
+    bool houseSetup(const std::string infilePath);
 
      /**
      * @brief Checks if the specified space is valid within the house (i.e. not a wall).
@@ -67,7 +68,6 @@ public:
 private:
     std::unordered_set<Coordinate, cHash> spaces;          /* A unordered set of valid spaces that the robot can reach. Spaces are relative to the charging dock (origin). */
     std::unordered_map<Coordinate, int, cHash> dirtLevel;  /* An unordered map of valid space : dirt level. */
-    int remainingDirt;                                      /* Remaining dirt count. */
 };
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef ABSTRACT_WALLS_SENSOR_H
 #define ABSTRACT_WALLS_SENSOR_H
 
-#include "../enums/direction.h"
+#include "direction.h"
 
 /* 
 	WallsSensor abstract class declaration, as per the requirements.
