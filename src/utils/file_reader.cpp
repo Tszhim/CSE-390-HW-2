@@ -1,11 +1,5 @@
 #include "file_reader.h"
 
-FileReader::FileReader(std::string infilePath) {
-    this->infilePath = infilePath;
-}
-
-FileReader::~FileReader() {}
-
 int FileReader::readMaxSteps() const {
     std::ifstream f = std::ifstream(this->infilePath);
     if(f.fail()) 
@@ -68,8 +62,8 @@ int FileReader::readColCount() const {
 
 bool FileReader::readSpaces(std::unordered_set<Coordinate, cHash>& spaces, std::unordered_map<Coordinate, int, cHash>& dirtLevel) const {
     /* Don't read rows/cols past the bounds. */
-    int row_bound = readRowCount() - 1;
-    int col_bound = readColCount() - 1;
+    int row_bound = readRowCount();
+    int col_bound = readColCount();
     if(row_bound == -1 || col_bound == -1)
         return false;
 
@@ -86,11 +80,11 @@ bool FileReader::readSpaces(std::unordered_set<Coordinate, cHash>& spaces, std::
     
     /* House starts at line 6. Validate house and get charging dock location on first pass. */
     int dock_found = false;
-    int row, dock_row, dock_col = 0;
+    int row = 0, dock_row = 0, dock_col = 0;
 
     while(getline(f, str)) {
         /* Meet bound constraints. */
-        if(row > row_bound) 
+        if(row >= row_bound) 
             break;
         if(str.length() > col_bound) 
             str = str.substr(0, col_bound);
@@ -98,11 +92,12 @@ bool FileReader::readSpaces(std::unordered_set<Coordinate, cHash>& spaces, std::
         /* Check for correct formatting. */
         if(str.find_first_not_of("W0123456789D ") != std::string::npos)
             return false;
-        if(dock_col = str.find('D'); dock_col != std::string::npos) {
+        if(int temp = str.find('D'); temp != std::string::npos) {
             if(dock_found) 
                 return false;
             dock_found = true;
             dock_row = row;
+            dock_col = temp;
         }
         row++;
     }
@@ -122,12 +117,18 @@ bool FileReader::readSpaces(std::unordered_set<Coordinate, cHash>& spaces, std::
     Coordinate space;
     int dirt = 0;
 
-    while(getline(f, str)) {
+    while(row < row_bound) {
+        /* Read next line if any, otherwise, wait for space padding. */
+        if(!getline(f, str))
+            str = "";
+
         /* Meet bound constraints. */
-        if(row > row_bound) 
-            break;
         if(str.length() > col_bound) 
             str = str.substr(0, col_bound);
+
+        /* Pad out empty spaces with spaces. */
+        while(str.length() < col_bound)
+            str += " ";
 
         /* Store relevant information. */
         for(int i = 0; i < str.length(); i++) {

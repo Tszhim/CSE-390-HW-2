@@ -1,12 +1,5 @@
 #include "robot.h"
 
-Robot::Robot() {
-    space.x = 0;
-    space.y = 0;
-}
-
-Robot::~Robot() {}
-
 bool Robot::robotSetup(const std::string infilePath) {
     FileReader fr = FileReader(infilePath);
     

@@ -1,9 +1,5 @@
 #include "concrete_battery_meter.h"
 
-ConcreteBatteryMeter::ConcreteBatteryMeter() {}
-
-ConcreteBatteryMeter::~ConcreteBatteryMeter() {}
-
 size_t ConcreteBatteryMeter::getBatteryState() const {
     return batteryState;
 }

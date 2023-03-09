@@ -6,6 +6,7 @@
 #include <stack>
 #include "abstract_algorithm.h"
 #include "coordinate.h"
+#include "hash.h"
 
 /**
  * @brief The concrete implementation of the abstract class "AbstractAlgorithm".
@@ -29,7 +30,7 @@ public:
      * @brief Stores the number of steps allocated to the robot for the mission.
      * @param maxSteps The number of steps allocated.
      */
-    void setMaxSteps(std::size_t maxSteps);
+    void setMaxSteps(const std::size_t maxSteps);
 
     /**
      * @brief Stores the location of the BatteryMeter for future data requests.
@@ -57,9 +58,9 @@ public:
 
 private:
     size_t missionBudget;  // The number of steps allocated to the robot for the mission.
-    BatteryMeter* bm;
-    DirtSensor* ds;
-    WallsSensor* ws;
+    const BatteryMeter* bm;
+    const DirtSensor* ds;
+    const WallsSensor* ws;
 
     std::unordered_map<Coordinate, int, cHash> nodes;        // Algorithm view of all valid spaces in the house and their dirt levels.
     std::unordered_set<Coordinate, Coordinate, cHash> edges; // Algorithm view of all connections between valid spaces in the house.

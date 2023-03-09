@@ -4,7 +4,7 @@
 
 int main(int argc, char** argv) {
     if(argc < 2) {
-        std::cout << "Too few arguments. USAGE: ./executable <houseFilePath>" << std::endl;
+        std::cout << "Too few arguments. USAGE: ./robot <houseFilePath>" << std::endl;
         return 1;
     }
     std::string houseFilePath = argv[1];

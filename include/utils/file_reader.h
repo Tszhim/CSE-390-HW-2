@@ -20,7 +20,7 @@ public:
      * @brief Constructs a "FileReader" object.
      * @param infileName The input file to read from.
      */
-    FileReader(std::string infilePath) {}
+    FileReader(std::string infilePath) {this->infilePath = infilePath;}
 
     /**
      * @brief Destroys the created "FileReader" object.

@@ -12,4 +12,12 @@ struct Coordinate {
     int y;
 };
 
+inline bool operator==(const Coordinate& c1, const Coordinate& c2) {
+    return (c1.x == c2.x) && (c1.y == c2.y);
+}
+
+inline bool operator!=(const Coordinate& c1, const Coordinate& c2) {
+    return !(c1 == c2);
+}
+
 #endif

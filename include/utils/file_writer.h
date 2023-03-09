@@ -7,7 +7,7 @@
 #include "step.h"
 #include "coordinate.h"
 
-#define OFILE "output.txt"
+#define OFILE "../output/output.txt"
 
 /**
  * @brief A class declaration for writing mission results to file.

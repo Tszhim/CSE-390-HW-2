@@ -1,9 +1,5 @@
 #include "concrete_walls_sensor.h"
 
-ConcreteWallsSensor::ConcreteWallsSensor() {}
-
-ConcreteWallsSensor::~ConcreteWallsSensor() {}
-
 bool ConcreteWallsSensor::isWall(Direction d) const {
     if(d == Direction::North) 
         return this->wallNorth;

@@ -1,9 +1,5 @@
 #include "file_writer.h"
 
-FileWriter::FileWriter() {}
-
-FileWriter::~FileWriter() {}
-
 void FileWriter::recordStep(const Step s) {
     if(s == Step::North)
         this->steps += "N";

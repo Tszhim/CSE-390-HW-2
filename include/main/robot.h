@@ -36,6 +36,7 @@ public:
      * @return The number of allocated steps.
     */
     int getMissionBudget() const;
+    
     /** 
      * @brief Checks for the total number of steps the robot has taken.
      * @return The number of steps.

@@ -1,9 +1,5 @@
 #include "house.h"
 
-House::House() {}
-
-House::~House() {}
-
 bool House::houseSetup(const std::string infilePath) {
     FileReader fr = FileReader(infilePath); 
 

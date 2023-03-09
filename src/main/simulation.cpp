@@ -1,9 +1,5 @@
 #include "simulation.h"
 
-Simulation::Simulation() {}
-
-Simulation::~Simulation() {}
-
 bool Simulation::readHouseFile(const std::string houseFilePath) {
     return this->h.houseSetup(houseFilePath) && this->r.robotSetup(houseFilePath);
 }
@@ -17,7 +13,8 @@ void Simulation::setAlgorithm(ConcreteAlgorithm algorithm) {
 }
 
 bool Simulation::run() {
-
+    //TODO:
+    return true;
 }
 
 bool Simulation::writeOutput() {
