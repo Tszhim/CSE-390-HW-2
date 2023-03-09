@@ -41,7 +41,7 @@ bool Robot::budgetExceeded() const {
     return this->stepCount >= this->missionBudget;
 }
 
-void Robot::move (const Step s) {
+void Robot::move(const Step s) {
     this->stepCount++;
 
     /* Sanity check. */

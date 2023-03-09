@@ -31,7 +31,7 @@ bool FileWriter::setupOfile() const {
 }
 
 bool FileWriter::writeStepCount(const int totalSteps) const {
-    std::ofstream f = std::ofstream(OFILE);
+    std::ofstream f = std::ofstream(OFILE, std::ios::app);
     if(f.fail())
         return false;
 
@@ -40,7 +40,7 @@ bool FileWriter::writeStepCount(const int totalSteps) const {
 }
 
 bool FileWriter::writeDirtLeft(const int dirtLeft) const {
-    std::ofstream f = std::ofstream(OFILE);
+    std::ofstream f = std::ofstream(OFILE, std::ios::app);
     if(f.fail())
         return false;
 
@@ -49,23 +49,23 @@ bool FileWriter::writeDirtLeft(const int dirtLeft) const {
 }
 
 bool FileWriter::writeRobotStatus(const int batteryLeft) const {
-    std::ofstream f = std::ofstream(OFILE);
+    std::ofstream f = std::ofstream(OFILE, std::ios::app);
     if(f.fail())
         return false;
 
     /* Finished if algorithm reported, otherwise, working if battery > 0 and dead if battery <= 0. */
     if(this->steps.find('F') != std::string::npos)
-        f << "Status = " << "FINISHED";
+        f << "Status = FINISHED" << std::endl;
     else if(batteryLeft > 0) 
-        f << "Status = " << "WORKING";
+        f << "Status = WORKING" << std::endl;
     else
-        f << "Status = " << "DEAD";
+        f << "Status = DEAD" << std::endl;
     
     return true;
 }
 
 bool FileWriter::writeSteps() const {
-    std::ofstream f = std::ofstream(OFILE);
+    std::ofstream f = std::ofstream(OFILE, std::ios::app);
     if(f.fail())
         return false;
     
