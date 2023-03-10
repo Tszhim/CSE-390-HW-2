@@ -17,6 +17,7 @@ void ConcreteAlgorithm::setWallsSensor(const WallsSensor& wallsSensor) {
 }
 
 Step ConcreteAlgorithm::nextStep() {
+    //TODO:
     return Step::North;
 }
 
