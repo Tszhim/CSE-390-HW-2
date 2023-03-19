@@ -3,10 +3,15 @@
 
 #include <unordered_map>
 #include <unordered_set>
-#include <stack>
+#include <memory>
 #include "abstract_algorithm.h"
+#include "concrete_battery_meter.h"
+#include "concrete_dirt_sensor.h"
+#include "concrete_walls_sensor.h"
 #include "coordinate.h"
 #include "hash.h"
+#include "node.h"
+
 
 /**
  * @brief The concrete implementation of the abstract class "AbstractAlgorithm".
@@ -19,7 +24,7 @@ public:
     /**
      * @brief Constructs a "ConcreteAlgorithm" object.
      */
-    ConcreteAlgorithm() {}
+    ConcreteAlgorithm() : stepCount(0), mapFinished(false) {}
 
     /**
      * @brief Destroys a "ConcreteAlgorithm" object.
@@ -62,10 +67,19 @@ private:
     const DirtSensor* ds;
     const WallsSensor* ws;
 
-    std::unordered_map<Coordinate, int, cHash> nodes;        // Algorithm view of all valid spaces in the house and their dirt levels.
-    std::unordered_set<Coordinate, Coordinate, cHash> edges; // Algorithm view of all connections between valid spaces in the house.
-    std::stack<Coordinate> branch_stack;                     // Maintains the list of branches yet to be traversed.
-    std::stack<Coordinate> path_stack;                       // Maintains the current path the robot is on from charging dock.
+    int batteryLeft;
+    int dirt;
+    bool wallNorth, wallWest, wallSouth, wallEast;
+
+    /* Maintained by algorithm. */
+    int batteryCap;
+    int stepCount;                                               // Maintains number of steps taken.
+    Coordinate robotCoords;                                      // Maintains current robot position.
+    bool mapFinished;                                            // Whether the house mapping is completed.
+
+    std::unordered_map<Coordinate, std::shared_ptr<Node>, cHash> houseMap;
+
+    void setup();
 };
 
 #endif

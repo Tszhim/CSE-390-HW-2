@@ -1,1 +1,5 @@
 .vscode
+robot
+test.txt
+build/*
+output.txt
