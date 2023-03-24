@@ -3,7 +3,10 @@
 
 #include <unordered_map>
 #include <unordered_set>
+#include <queue>
+#include <stack>
 #include <memory>
+#include <limits>
 #include "abstract_algorithm.h"
 #include "concrete_battery_meter.h"
 #include "concrete_dirt_sensor.h"
@@ -24,7 +27,7 @@ public:
     /**
      * @brief Constructs a "ConcreteAlgorithm" object.
      */
-    ConcreteAlgorithm() : stepCount(0), mapFinished(false) {}
+    ConcreteAlgorithm() : stepCount(0) {}
 
     /**
      * @brief Destroys a "ConcreteAlgorithm" object.
@@ -62,7 +65,7 @@ public:
     Step nextStep();
 
 private:
-    size_t missionBudget;  // The number of steps allocated to the robot for the mission.
+    size_t missionBudget;                                                         // The number of steps allocated to the robot for the mission.
     const BatteryMeter* bm;
     const DirtSensor* ds;
     const WallsSensor* ws;
@@ -73,13 +76,15 @@ private:
 
     /* Maintained by algorithm. */
     int batteryCap;
-    int stepCount;                                               // Maintains number of steps taken.
-    Coordinate robotCoords;                                      // Maintains current robot position.
-    bool mapFinished;                                            // Whether the house mapping is completed.
+    int stepCount;                                                                // Maintains number of steps taken.
+    Coordinate robotCoords;                                                       // Maintains current robot position.
 
-    std::unordered_map<Coordinate, std::shared_ptr<Node>, cHash> houseMap;
+    std::unordered_map<Coordinate, std::shared_ptr<Node>, cHash> houseMap;        // Maps coordinates to a node object.
+    std::stack<std::shared_ptr<Node>> shortestPath;                               // The queue maintaining the shortest path to wherever the robot needs to go.
 
     void setup();
+    void ConcreteAlgorithm::findShortestPath(std::shared_ptr<Node> start, std::shared_ptr<Node> end);
+    Step ConcreteAlgorithm::traverseShortestPath();
 };
 
 #endif
