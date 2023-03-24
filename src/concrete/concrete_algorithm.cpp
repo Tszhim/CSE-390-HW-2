@@ -17,17 +17,77 @@ void ConcreteAlgorithm::setWallsSensor(const WallsSensor &wallsSensor) {
 }
 
 Step ConcreteAlgorithm::nextStep() {
-    //TODO:
+    /* Perform necessary setup before computing next step. */
     setup();
 
+    /* Get current node and dock node. */
+    std::shared_ptr<Node> dock = this->houseMap[Coordinate(0, 0)];
+    std::shared_ptr<Node> curr = this->houseMap[this->robotCoords];
+    
     /* Return finish when no more dirt cleanable with remaining mission budget and robot returned to charging dock. */
-    if (this->stepCount >= this->missionBudget && this->robotCoords.x == 0 && this->robotCoords.y == 0)
+    if(this->uncleanedNodes.size() == 0 && this->robotCoords.x == 0 && this->robotCoords.y == 0)
         return Step::Finish;
+
+    /* If the path stack is ever non-empty, traverse it. */
+    if(!this->shortestPath.empty())
+        return traverseShortestPath();
+
+    /* There are no nodes left to explore, return to dock. */
+    if(this->uncleanedNodes.size() == 0) {
+        findShortestPath(curr, dock);
+        return traverseShortestPath();
+    }
+
+    /* Estimation indicates that that the robot may have just enough mission budget to return (upper-bounded). */
+    if(this->missionBudget <= this->stepCount + this->distFromDock + 1) {
+        findShortestPath(curr, dock);
+        
+        /* If actual distance aligns with estimate, return to dock, otherwise continue. */
+        if(this->missionBudget <= this->stepCount + this->shortestPath.size() + 1)
+            return traverseShortestPath();
+        else
+            this->shortestPath = std::stack<std::shared_ptr<Node>>();
+    }
+
+    /* Estimation indicates that the robot may have just enough battery to return (upper-bounded). */
+    if(this->batteryLeft <= this->distFromDock + 1) {
+        findShortestPath(curr, dock);
+        
+        /* If actual distance aligns with estimate, return to dock, otherwise continue. */
+        if(this->batteryLeft <= this->shortestPath.size() + 1)
+            return traverseShortestPath();
+        else
+            this->shortestPath = std::stack<std::shared_ptr<Node>>();
+    }
 
     /* At this point, a move will be made. */
     this->stepCount++;
 
-    return Step::North;
+    /* If on charging dock, always fully charge. */
+    if(dock == curr && this->batteryLeft != this->batteryCap) 
+        return Step::Stay;
+
+    /* If on a space with dirt, always clean.  */
+    if(curr->getDirtLevel() != 0) {
+        /* Delete node from uncleanedNodes set once finished cleaning. */
+        if(curr->getDirtLevel() == 1) 
+            this->uncleanedNodes.erase(curr);
+
+        curr->decrementDirtLevel();
+        return Step::Stay;
+    }
+
+    /* At this point, a directional movement will be made. */
+    this->distFromDock++;
+
+    /* Traverse the closest neighbor to the current node, if it exists. */
+    std::shared_ptr<Node> neighbor = getClosestAdjacentNode();
+    if(neighbor)
+        return getDirectionToNode(neighbor);
+
+    /* Traverse the closest non-adjacent node. */
+    setClosestNonAdjacentNodePath();
+    return traverseShortestPath();
 }
 
 void ConcreteAlgorithm::setup() {
@@ -39,14 +99,108 @@ void ConcreteAlgorithm::setup() {
     this->wallSouth = dynamic_cast<const ConcreteWallsSensor *>(this->ws)->isWall(Direction::South);
     this->wallEast = dynamic_cast<const ConcreteWallsSensor *>(this->ws)->isWall(Direction::East);
 
-    /* Initialize some class attributes on first run. */
-    if (this->stepCount == 0) {
-        this->batteryCap = this->batteryLeft;
-        this->robotCoords = Coordinate(5, 0);
-        std::shared_ptr<Node> dockPtr = std::make_shared<Node>(robotCoords);
+    /* Map neighbors of the current node. */
+    markSurroundings();
 
+    /* Initialize some class attributes on first run. */
+    if(this->stepCount == 0) {
+        this->batteryCap = this->batteryLeft;
+
+        std::shared_ptr<Node> dockPtr = std::make_shared<Node>(robotCoords);
         this->houseMap.insert(std::make_pair(robotCoords, dockPtr));
     }
+
+    /* Set current node to visited. */
+    std::shared_ptr<Node> curr = this->houseMap[this->robotCoords];
+    curr->setVisited();
+}
+
+void ConcreteAlgorithm::markSurroundings() {
+    /* If north/south/east/west neighbor not mapped, add it to house map. */
+    if(!this->wallNorth)
+        mapNeighbor(Coordinate(this->robotCoords.x, this->robotCoords.y + 1));
+    if(!this->wallWest)
+        mapNeighbor(Coordinate(this->robotCoords.x - 1, this->robotCoords.y));
+    if(!this->wallSouth)
+        mapNeighbor(Coordinate(this->robotCoords.x, this->robotCoords.y - 1));
+    if(!this->wallEast)
+        mapNeighbor(Coordinate(this->robotCoords.x + 1, this->robotCoords.y));
+}
+
+void ConcreteAlgorithm::mapNeighbor(Coordinate coords) {
+    if(this->houseMap.count(coords) == 0) {
+        /* Add neighbor to house map.*/
+        std::shared_ptr<Node> neighbor = std::make_shared<Node>(robotCoords);
+        this->houseMap.insert(std::make_pair(coords, neighbor));
+
+        /* Add neighbor to current node's list of neighbors. */
+        std::shared_ptr<Node> curr = this->houseMap[this->robotCoords];
+        curr->addNeighbor(neighbor);
+
+        /* Add neighbor to list of nodes to clean. */
+        if(this->uncleanedNodes.count(neighbor) == 0) {
+            this->uncleanedNodes.insert(neighbor);
+        }
+    }
+}
+
+std::shared_ptr<Node> ConcreteAlgorithm::getClosestAdjacentNode() {
+    std::shared_ptr<Node> currNode = this->houseMap[this->robotCoords];
+    std::vector<std::shared_ptr<Node>> neighbors = currNode->getNeighbors();
+
+    int shortestDistance = std::numeric_limits<int>::max();
+    std::shared_ptr<Node> closestNode = nullptr;
+
+    /* Find the neighbor of the current node with the lowest Euclidean distance to dock. */
+    for(int i = 0; i < neighbors.size(); i++) {
+        std::shared_ptr<Node> adjacentNode = neighbors[i];
+        
+        /* Skip visited nodes. */
+        if(adjacentNode->isVisited())
+            continue;
+        
+        if(adjacentNode->getEuclidianDist() < shortestDistance) {
+            shortestDistance = adjacentNode->getEuclidianDist();
+            closestNode = adjacentNode;
+        }
+    }
+    return closestNode;
+}
+
+void ConcreteAlgorithm::setClosestNonAdjacentNodePath() {
+    std::shared_ptr<Node> curr = this->houseMap[this->robotCoords];
+
+    /* Maintain the shortest path to an unvisited node. */
+    std::stack<std::shared_ptr<Node>> nextPath;
+    int pathSize = std::numeric_limits<int>::max();
+
+    /* Determine the unvisited node to traverse based on proximity to current node. */
+    for(auto& uncleanedNode : this->uncleanedNodes) {
+        findShortestPath(curr, uncleanedNode);
+
+        if(this->shortestPath.size() < pathSize) {
+            nextPath = this->shortestPath;
+            pathSize = this->shortestPath.size();
+        }
+    }
+    this->shortestPath = nextPath;
+}
+
+Step ConcreteAlgorithm::getDirectionToNode(std::shared_ptr<Node> node) {
+    /* Given a node that is directly adjacent to the robot, get the direction to that node. */
+    Coordinate goToCoords = node->getCoords();
+
+    if(this->robotCoords.y + 1 == goToCoords.y)
+        return Step::North;
+    if(this->robotCoords.x - 1 == goToCoords.x) 
+        return Step::West;
+    if(this->robotCoords.y - 1 == goToCoords.y)
+        return Step::South;
+    if(this->robotCoords.x + 1 == goToCoords.x) 
+        return Step::East;
+
+    // Unexpected error.
+    return Step::Stay;
 }
 
 void ConcreteAlgorithm::findShortestPath(std::shared_ptr<Node> start, std::shared_ptr<Node> end) {
@@ -100,15 +254,7 @@ Step ConcreteAlgorithm::traverseShortestPath() {
     std::shared_ptr<Node> node = this->shortestPath.top();
     this->shortestPath.pop();
 
-    Coordinate next = node->getCoords();
-    if(next.y > this->robotCoords.y) 
-        return Step::North;
-    if(next.x < this->robotCoords.x)
-        return Step::West;
-    if(next.y < this->robotCoords.y)
-        return Step::South;
-    if(next.x > this->robotCoords.x)
-        return Step::East;
+    return getDirectionToNode(node);
 }
 
 

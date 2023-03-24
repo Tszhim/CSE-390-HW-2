@@ -18,6 +18,7 @@ public:
     /* Setter methods */
     inline void addNeighbor(std::shared_ptr<Node> neighbor) { this->neighbors.push_back(neighbor); }
     inline void setDirtLevel(int dirtLevel) { this->dirtLevel = dirtLevel; }
+    inline void decrementDirtLevel() { this->dirtLevel--; }
     inline void setVisited() { this->visited = true; }
 
     /* Getter methods */

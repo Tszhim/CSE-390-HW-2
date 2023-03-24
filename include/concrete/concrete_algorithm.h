@@ -27,7 +27,7 @@ public:
     /**
      * @brief Constructs a "ConcreteAlgorithm" object.
      */
-    ConcreteAlgorithm() : stepCount(0) {}
+    ConcreteAlgorithm() : stepCount(0), robotCoords(Coordinate(0, 0)) {}
 
     /**
      * @brief Destroys a "ConcreteAlgorithm" object.
@@ -78,13 +78,20 @@ private:
     int batteryCap;
     int stepCount;                                                                // Maintains number of steps taken.
     Coordinate robotCoords;                                                       // Maintains current robot position.
+    int distFromDock;                                                             // An estimation of how far the robot is from the dock.
 
     std::unordered_map<Coordinate, std::shared_ptr<Node>, cHash> houseMap;        // Maps coordinates to a node object.
+    std::unordered_set<std::shared_ptr<Node>, cHash> uncleanedNodes;              // Nodes to explore next.
     std::stack<std::shared_ptr<Node>> shortestPath;                               // The queue maintaining the shortest path to wherever the robot needs to go.
 
     void setup();
-    void ConcreteAlgorithm::findShortestPath(std::shared_ptr<Node> start, std::shared_ptr<Node> end);
-    Step ConcreteAlgorithm::traverseShortestPath();
+    void markSurroundings();
+    void mapNeighbor(Coordinate coords);
+    std::shared_ptr<Node> getClosestAdjacentNode();
+    void setClosestNonAdjacentNodePath();
+    Step getDirectionToNode(std::shared_ptr<Node> node);
+    void findShortestPath(std::shared_ptr<Node> start, std::shared_ptr<Node> end);
+    Step traverseShortestPath();
 };
 
 #endif
