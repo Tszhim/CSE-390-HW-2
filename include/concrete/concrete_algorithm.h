@@ -27,7 +27,7 @@ public:
     /**
      * @brief Constructs a "ConcreteAlgorithm" object.
      */
-    ConcreteAlgorithm() : stepCount(0), robotCoords(Coordinate(0, 0)) {}
+    ConcreteAlgorithm() : stepCount(0), robotCoords(Coordinate(0, 0)), distFromDock(0) {}
 
     /**
      * @brief Destroys a "ConcreteAlgorithm" object.
@@ -81,7 +81,7 @@ private:
     int distFromDock;                                                             // An estimation of how far the robot is from the dock.
 
     std::unordered_map<Coordinate, std::shared_ptr<Node>, cHash> houseMap;        // Maps coordinates to a node object.
-    std::unordered_set<std::shared_ptr<Node>, cHash> uncleanedNodes;              // Nodes to explore next.
+    std::unordered_set<std::shared_ptr<Node>, nHash> uncleanedNodes;              // Nodes to explore next.
     std::stack<std::shared_ptr<Node>> shortestPath;                               // The queue maintaining the shortest path to wherever the robot needs to go.
 
     void setup();

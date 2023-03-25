@@ -45,9 +45,11 @@ void Robot::move(const Step s) {
     this->stepCount++;
 
     /* Sanity check. */
-    if(this->batteryLeft <= 0 || budgetExceeded())
+    if(this->batteryLeft < 0 || budgetExceeded())
         return;
 
+    if(s == Step::Finish)
+        return;
     if(s == Step::North)
         this->space.y += 1;
     if(s == Step::West)
