@@ -45,10 +45,12 @@ void Robot::move(const Step s) {
     this->stepCount++;
 
     /* Sanity check. */
-    if(this->batteryLeft <= 0 || budgetExceeded())
+    if(this->batteryLeft < 0 || budgetExceeded())
         return;
 
-    if(s == Step::North)
+    if(s == Step::Finish)
+        return;
+    if(s == Step::North) 
         this->space.y += 1;
     if(s == Step::West)
         this->space.x -= 1;
@@ -56,13 +58,15 @@ void Robot::move(const Step s) {
         this->space.y -= 1;
     if(s == Step::East)
         this->space.x += 1;
-    // Do nothing otherwise.
+
+    /* Any move costs battery except staying on dock. */
+    if(s != Step::Stay || s == Step::Stay && !onChargingDock()) {
+        this->batteryLeft--;
+    }
 
     /* Recompute battery. */
     if(onChargingDock()) {
         int chargedBattery = this->batteryLeft + (this->batteryCap / 20);
         this->batteryLeft = chargedBattery <= this->batteryCap ? chargedBattery : this->batteryCap;
     }   
-    else
-        this->batteryLeft--; 
 }

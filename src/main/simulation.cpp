@@ -16,10 +16,10 @@ bool Simulation::run() {
     /* Iterate until maxSteps is reached. */
     while(!this->r.budgetExceeded()) {
         Coordinate currLoc = this->r.getLoc();
-        bool northWall = this->h.isValidSpace(Coordinate(currLoc.x, currLoc.y + 1));
-        bool westWall = this->h.isValidSpace(Coordinate(currLoc.x - 1, currLoc.y));
-        bool southWall = this->h.isValidSpace(Coordinate(currLoc.x, currLoc.y - 1));
-        bool eastWall = this->h.isValidSpace(Coordinate(currLoc.x + 1, currLoc.y));
+        bool northWall = !this->h.isValidSpace(Coordinate(currLoc.x, currLoc.y + 1));
+        bool westWall = !this->h.isValidSpace(Coordinate(currLoc.x - 1, currLoc.y));
+        bool southWall = !this->h.isValidSpace(Coordinate(currLoc.x, currLoc.y - 1));
+        bool eastWall = !this->h.isValidSpace(Coordinate(currLoc.x + 1, currLoc.y));
 
         /* Update sensors. */
         this->bm.setBatteryState(this->r.getBatteryLeft());
@@ -32,12 +32,11 @@ bool Simulation::run() {
         /* Get next algorithm move. */
         Step nextStep = this->algo.nextStep();
         this->fw.recordStep(nextStep);
-
+        this->r.move(nextStep);
+        
         /* Exit early if finished. */
         if(nextStep == Step::Finish)
             break;
-
-        this->r.move(nextStep);
 
         /* Clean spot if stayed. */
         if(nextStep == Step::Stay)

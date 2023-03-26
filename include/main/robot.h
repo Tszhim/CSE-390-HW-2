@@ -17,7 +17,7 @@ public:
     /**
      * @brief Constructs a "Robot" object.
      */
-    Robot() {}
+    Robot() : stepCount(0) {}
 
     /**
      * @brief Destroys a "Robot" object.

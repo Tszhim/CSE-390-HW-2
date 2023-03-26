@@ -11,7 +11,7 @@ bool House::houseSetup(const std::string infilePath) {
 }
 
 bool House::isValidSpace(const Coordinate space) const {
-    return this->spaces.find(space) != spaces.end();
+    return this->spaces.find(space) != this->spaces.end();
 }
 
 int House::getDirt(const Coordinate space) const {
