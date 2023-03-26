@@ -52,6 +52,10 @@ Step ConcreteAlgorithm::nextStep() {
         return returnToDock();
     }
 
+    /* If on a space with no dirt, immediately remove it from the list of nodes to visit. */
+    if(curr->getDirtLevel() == 0 && this->unvisitedNodes.count(curr) == 1) 
+        this->unvisitedNodes.erase(curr);
+
     /* Estimation indicates that that the robot may have just enough mission budget to return (upper-bounded). */
     if(!onChargingDock() && this->missionBudget <= this->stepCount + this->distFromDock + 1) {
         auto path = findShortestPath(curr, dock);
@@ -87,10 +91,6 @@ Step ConcreteAlgorithm::nextStep() {
         this->pathToNode = std::stack<std::shared_ptr<Node>>();
         return Step::Stay;
     }
-
-    /* If on a space with no dirt, immediately remove it from the list of nodes to visit. */
-    if(curr->getDirtLevel() == 0 && this->unvisitedNodes.count(curr) == 1) 
-        this->unvisitedNodes.erase(curr);
 
     /* If on a space with dirt, always clean. */
     if(curr->getDirtLevel() != 0) {
@@ -210,6 +210,7 @@ std::shared_ptr<Node> ConcreteAlgorithm::getClosestAdjacentNode() {
 
 void ConcreteAlgorithm::setClosestNonAdjacentNodePath() {
     std::shared_ptr<Node> curr = this->houseMap[this->robotCoords];
+    std::vector<std::shared_ptr<Node>> unreachableNodes;
 
     /* Maintain the shortest path to an unvisited node. */
     std::stack<std::shared_ptr<Node>> nextPath;
@@ -218,6 +219,12 @@ void ConcreteAlgorithm::setClosestNonAdjacentNodePath() {
     /* Determine the unvisited node to traverse based on proximity to current node. */
     for(auto& unvisitedNode : this->unvisitedNodes) {
         auto path = findShortestPath(curr, unvisitedNode);
+
+        /* If the distance to a node is greater than the max amount of battery, it is impossible to reach, remove it */
+        if(path.size() > this->batteryCap / 2) {
+            this->unvisitedNodes.erase(unvisitedNode);
+            continue;
+        }
 
         if(path.size() < pathSize) {
             nextPath = path;
