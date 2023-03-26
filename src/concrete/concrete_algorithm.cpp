@@ -71,7 +71,7 @@ Step ConcreteAlgorithm::nextStep() {
         auto path = findShortestPath(curr, dock);
         
         /* If actual distance aligns with estimate, return to dock, otherwise continue. */
-        if(this->batteryLeft <= this->pathToDock.size() + 1){ 
+        if(this->batteryLeft <= path.size() + 1){ 
             this->pathToDock = path;
             return returnToDock();
         }
