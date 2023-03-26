@@ -3,3 +3,5 @@ robot
 test.txt
 build/*
 output.txt
+tests/*
+tests_output_samples/*

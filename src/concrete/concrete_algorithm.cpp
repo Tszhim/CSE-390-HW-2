@@ -222,7 +222,7 @@ void ConcreteAlgorithm::setClosestNonAdjacentNodePath() {
 
         /* If the distance to a node is greater than the max amount of battery, it is impossible to reach, remove it */
         if(path.size() > this->batteryCap / 2) {
-            this->unvisitedNodes.erase(unvisitedNode);
+            unreachableNodes.push_back(unvisitedNode);
             continue;
         }
 
@@ -232,6 +232,11 @@ void ConcreteAlgorithm::setClosestNonAdjacentNodePath() {
         }
     }
     this->pathToNode = nextPath;
+
+    /* Remove all unreachable nodes from unvisitedNodes list */
+    for(auto& node : unreachableNodes) {
+        this->unvisitedNodes.erase(node);
+    }
 }
 
 Step ConcreteAlgorithm::getDirectionToNode(std::shared_ptr<Node> node) {
