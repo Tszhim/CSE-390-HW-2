@@ -57,7 +57,7 @@ public:
      * @param wallsSensor A reference to the WallsSensor.
      */
     void setWallsSensor(const WallsSensor& wallsSensor);
-
+    
     /**
      * @brief Calculates the next step the robot should take based on pertinent data.
      * @return The next step the robot should take.
@@ -81,17 +81,20 @@ private:
     int distFromDock;                                                             // An estimation of how far the robot is from the dock.
 
     std::unordered_map<Coordinate, std::shared_ptr<Node>, cHash> houseMap;        // Maps coordinates to a node object.
-    std::unordered_set<std::shared_ptr<Node>, nHash> uncleanedNodes;              // Nodes to explore next.
-    std::stack<std::shared_ptr<Node>> shortestPath;                               // The queue maintaining the shortest path to wherever the robot needs to go.
+    std::unordered_set<std::shared_ptr<Node>, nHash> unvisitedNodes;              // Nodes to explore next.
+    std::stack<std::shared_ptr<Node>> pathToDock;                                 // Empty when not in use, otherwise the robot must follow this path under any circumstance.
+    std::stack<std::shared_ptr<Node>> pathToNode;                                 // Empty when not in use, otherwise the robot will follow this path if pathToDock is not set. 
 
     void setup();
+    bool onChargingDock();
     void markSurroundings();
     void mapNeighbor(Coordinate coords);
     std::shared_ptr<Node> getClosestAdjacentNode();
     void setClosestNonAdjacentNodePath();
     Step getDirectionToNode(std::shared_ptr<Node> node);
-    void findShortestPath(std::shared_ptr<Node> start, std::shared_ptr<Node> end);
-    Step traverseShortestPath();
+    std::stack<std::shared_ptr<Node>> findShortestPath(std::shared_ptr<Node> start, std::shared_ptr<Node> end);
+    Step returnToDock();
+    Step moveToNode();
 };
 
 #endif

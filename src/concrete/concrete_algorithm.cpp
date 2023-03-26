@@ -16,6 +16,10 @@ void ConcreteAlgorithm::setWallsSensor(const WallsSensor &wallsSensor) {
     this->ws = &wallsSensor;
 }
 
+bool ConcreteAlgorithm::onChargingDock() {
+    return this->robotCoords.x == 0 && this->robotCoords.y == 0;
+}
+
 Step ConcreteAlgorithm::nextStep() {
     /* Perform necessary setup before computing next step. */
     setup();
@@ -26,69 +30,73 @@ Step ConcreteAlgorithm::nextStep() {
     
     /* EXIT CONDITIONS */
 
-    /* Return finish when no more dirt is cleanable and robot returned to charging dock. */
-    if(this->uncleanedNodes.size() == 0 && this->robotCoords.x == 0 && this->robotCoords.y == 0)
+    /* Return finish when no more dirt is cleanable OR the mission budget has been exhausted and robot returned to charging dock. */
+    if((this->unvisitedNodes.size() == 0 || this->missionBudget - 1 == this->stepCount) && onChargingDock()) {
         return Step::Finish;
+    }
 
-    /* Return finish if the mission budget has been exhausted and robot returned to charging dock. */
-    if((this->missionBudget - 1 == this->stepCount) && this->robotCoords.x == 0 && this->robotCoords.y == 0)
-        return Step::Finish;
-    
     /* After this point, a move will be made. */
     this->stepCount++;
 
 
     /* TRAVERSAL TO A PARTICULAR NODE */
 
-    /* If the path stack is ever non-empty, traverse it. */
-    if(!this->shortestPath.empty()) {
-        return traverseShortestPath();
+    /* If the path to return to dock is ever non-empty, the robot must follow the path. */
+    if(!this->pathToDock.empty()) {
+        return returnToDock();
     }
 
     /* There are no nodes left to explore, return to dock. */
-    if(this->uncleanedNodes.size() == 0) {
-        findShortestPath(curr, dock);
-        return traverseShortestPath();
+    if(this->unvisitedNodes.size() == 0) {
+        this->pathToDock = this->findShortestPath(curr, dock);
+        return returnToDock();
     }
 
     /* Estimation indicates that that the robot may have just enough mission budget to return (upper-bounded). */
-    if(dock != curr && this->missionBudget <= this->stepCount + this->distFromDock + 1) {
-        findShortestPath(curr, dock);
+    if(!onChargingDock() && this->missionBudget <= this->stepCount + this->distFromDock + 1) {
+        auto path = findShortestPath(curr, dock);
         
-        /* If actual distance aligns with estimate, return to dock, otherwise continue. */
-        if(this->missionBudget <= this->stepCount + this->shortestPath.size() + 1) 
-            return traverseShortestPath();
-        else
-            this->shortestPath = std::stack<std::shared_ptr<Node>>();
+        /* If actual distance confirms the estimate, return to dock. */
+        if(this->missionBudget <= this->stepCount + path.size() + 1) {
+            this->pathToDock = path;
+            return returnToDock();
+        }
+        /* If the actual distance does not confirm the estimate, continue exploration. */
+        else 
+            this->distFromDock = path.size();
     }
 
     /* Estimation indicates that the robot may have just enough battery to return (upper-bounded). */
-    if(dock != curr && this->batteryLeft <= this->distFromDock + 1) {
-        findShortestPath(curr, dock);
+    if(!onChargingDock() && this->batteryLeft <= this->distFromDock + 1) {
+        auto path = findShortestPath(curr, dock);
         
         /* If actual distance aligns with estimate, return to dock, otherwise continue. */
-        if(this->batteryLeft <= this->shortestPath.size() + 1)
-            return traverseShortestPath();
-        else {
-            this->distFromDock = this->shortestPath.size();
-            this->shortestPath = std::stack<std::shared_ptr<Node>>();
+        if(this->batteryLeft <= this->pathToDock.size() + 1){ 
+            this->pathToDock = path;
+            return returnToDock();
         }
+        else 
+            this->distFromDock = path.size();
     }   
-
 
     /* CHARGING AND CLEANING */
 
     /* If on charging dock, always fully charge. */
-    if(dock == curr && this->batteryLeft != this->batteryCap) {
+    if(onChargingDock() && this->batteryLeft != this->batteryCap) {
         this->distFromDock = 0;
+        this->pathToNode = std::stack<std::shared_ptr<Node>>();
         return Step::Stay;
     }
 
-    /* If on a space with dirt, always clean.  */
+    /* If on a space with no dirt, immediately remove it from the list of nodes to visit. */
+    if(curr->getDirtLevel() == 0 && this->unvisitedNodes.count(curr) == 1) 
+        this->unvisitedNodes.erase(curr);
+
+    /* If on a space with dirt, always clean. */
     if(curr->getDirtLevel() != 0) {
-        /* Delete node from uncleanedNodes set once finished cleaning. */
+        /* Immediately remove space from list of nodes to visit once dirt level is 0. */
         if(curr->getDirtLevel() == 1) 
-            this->uncleanedNodes.erase(curr);
+            this->unvisitedNodes.erase(curr);
 
         curr->decrementDirtLevel();
         return Step::Stay;
@@ -97,14 +105,19 @@ Step ConcreteAlgorithm::nextStep() {
 
     /* EXPLORATION */
 
-    /* Traverse the closest neighbor to the current node, if it exists. */
+    /* If a node to get to is already determined, continue following it. */
+    if(!this->pathToNode.empty()) {
+        return moveToNode();
+    }
+
+    /* Traverse the closest adjacent node, if it exists. */
     std::shared_ptr<Node> neighbor = getClosestAdjacentNode();
     if(neighbor)
         return getDirectionToNode(neighbor);
 
     /* Traverse the closest non-adjacent node. */
     setClosestNonAdjacentNodePath();
-    return traverseShortestPath();
+    return moveToNode();
 }
 
 void ConcreteAlgorithm::setup() {
@@ -146,16 +159,16 @@ void ConcreteAlgorithm::markSurroundings() {
 }
 
 void ConcreteAlgorithm::mapNeighbor(Coordinate coords) {
+    /* Add neighbor to house map, if not already mapped. */
     if(this->houseMap.count(coords) == 0) {
-        /* Add neighbor to house map.*/
         std::shared_ptr<Node> neighbor = std::make_shared<Node>(coords);
         this->houseMap.insert(std::make_pair(coords, neighbor));
     }
 
     /* Add neighbor to current node's list of neighbors, if not already present. */
     std::shared_ptr<Node> curr = this->houseMap[this->robotCoords];
-    std::vector<std::shared_ptr<Node>> neighbors = curr->getNeighbors();
     std::shared_ptr<Node> neighbor = this->houseMap[coords];
+    auto neighbors = curr->getNeighbors();
 
     bool found = false;
     for(int i = 0; i < neighbors.size(); i++) {
@@ -164,13 +177,12 @@ void ConcreteAlgorithm::mapNeighbor(Coordinate coords) {
             break;
         }    
     }
-
     if(!found)
         curr->addNeighbor(neighbor);
     
     /* Add neighbor to list of nodes to clean. */
-    if(this->uncleanedNodes.count(neighbor) == 0) 
-        this->uncleanedNodes.insert(neighbor);
+    if(this->unvisitedNodes.count(neighbor) == 0 && !neighbor->isVisited()) 
+        this->unvisitedNodes.insert(neighbor);
 }
 
 std::shared_ptr<Node> ConcreteAlgorithm::getClosestAdjacentNode() {
@@ -204,15 +216,15 @@ void ConcreteAlgorithm::setClosestNonAdjacentNodePath() {
     int pathSize = std::numeric_limits<int>::max();
 
     /* Determine the unvisited node to traverse based on proximity to current node. */
-    for(auto& uncleanedNode : this->uncleanedNodes) {
-        findShortestPath(curr, uncleanedNode);
+    for(auto& unvisitedNode : this->unvisitedNodes) {
+        auto path = findShortestPath(curr, unvisitedNode);
 
-        if(this->shortestPath.size() < pathSize) {
-            nextPath = this->shortestPath;
-            pathSize = this->shortestPath.size();
+        if(path.size() < pathSize) {
+            nextPath = path;
+            pathSize = path.size();
         }
     }
-    this->shortestPath = nextPath;
+    this->pathToNode = nextPath;
 }
 
 Step ConcreteAlgorithm::getDirectionToNode(std::shared_ptr<Node> node) {
@@ -239,7 +251,7 @@ Step ConcreteAlgorithm::getDirectionToNode(std::shared_ptr<Node> node) {
     return s;
 }
 
-void ConcreteAlgorithm::findShortestPath(std::shared_ptr<Node> start, std::shared_ptr<Node> end) {
+std::stack<std::shared_ptr<Node>> ConcreteAlgorithm::findShortestPath(std::shared_ptr<Node> start, std::shared_ptr<Node> end) {
     /* Assumes start and end exist, and the path stack has been cleared. */
 
     /* Create map to store the parent of each node for the shortest path. */
@@ -273,27 +285,39 @@ void ConcreteAlgorithm::findShortestPath(std::shared_ptr<Node> start, std::share
         }
     }
 
+    std::stack<std::shared_ptr<Node>> path;
+
     // No possible path exists.
     if(visited.count(end) == 0)
-        return;
+        return path;
 
     // Backtrack from end to start. Add each node to stack.
     std::shared_ptr<Node> pathNode = end;
     while(parent[pathNode] != nullptr) {
-        this->shortestPath.push(pathNode);
+        path.push(pathNode);
         pathNode = parent[pathNode];
     }
+
+    return path;
 }
 
-Step ConcreteAlgorithm::traverseShortestPath() {
-    /* Assumes that the path stack is not empty. */
-    if(this->shortestPath.empty()) {
+Step ConcreteAlgorithm::returnToDock() {
+    /* Sanity check. */
+    if(this->pathToDock.empty()) 
         return Step::Stay;
-    }
-    
-    std::shared_ptr<Node> node = this->shortestPath.top();
-    this->shortestPath.pop();
 
+    auto node = this->pathToDock.top();
+    this->pathToDock.pop();
+    return getDirectionToNode(node);
+}
+
+Step ConcreteAlgorithm::moveToNode() {
+    /* Sanity check. */
+    if(this->pathToNode.empty()) 
+        return Step::Stay;
+
+    auto node = this->pathToNode.top();
+    this->pathToNode.pop();
     return getDirectionToNode(node);
 }
 
